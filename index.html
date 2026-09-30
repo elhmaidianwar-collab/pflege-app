@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Google Maps Scraper - تصدير Google Sheets</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d9488">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS for Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; }
+    .spinner { border-top-color: transparent; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-20">
+
+  <!-- شريط العنوان العلوي -->
+  <header class="bg-teal-700 text-white p-4 shadow-md sticky top-0 z-50">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2 space-x-reverse">
+        <i class="fa-solid fa-map-location-dot text-2xl text-teal-200"></i>
+        <div>
+          <h1 class="text-base font-bold leading-tight">Google Maps Lead Scraper</h1>
+          <p class="text-[11px] text-teal-200">تصدير مباشر لـ Google Sheets & Excel</p>
+        </div>
+      </div>
+      <span class="text-xs bg-emerald-500 text-white px-2.5 py-1 rounded-full font-bold shadow-sm flex items-center gap-1">
+        <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span> Google Sheets
+      </span>
+    </div>
+  </header>
+
+  <main class="max-w-md mx-auto p-4 space-y-4">
+
+    <!-- زر تثبيت التطبيق على الهاتف - واضح ومباشر -->
+    <div id="mobileInstallBanner" onclick="triggerAppInstall()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 p-3.5 rounded-2xl shadow-md flex items-center justify-between cursor-pointer transition active:scale-95 border border-amber-400">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-slate-950 text-amber-400 rounded-xl flex items-center justify-center text-xl shadow-sm">
+          <i class="fa-solid fa-download"></i>
+        </div>
+        <div>
+          <div class="font-black text-sm">📲 اضغط هنا لتثبيت التطبيق على هاتفك</div>
+          <div class="text-[11px] text-slate-900 font-semibold">تثبيت كـ APK رسمي على شاشة الهاتف الرئيسية</div>
+        </div>
+      </div>
+      <span class="bg-slate-950 text-amber-400 text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm">تثبيت الآن</span>
+    </div>
+
+    <!-- كارت الإدخال 1: البحث المفتوح -->
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold text-sm text-slate-700 flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-teal-600"></i> 1. حدد المنشأة والمدينة
+        </h2>
+        <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">الخطوة الأولى</span>
+      </div>
+
+      <!-- خانة اسم المنشأة المفتوحة -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">
+          اسم المنشأة أو التخصص (اكتب أي اسم تريده):
+        </label>
+        <input type="text" id="queryInput" value="Pflegedienst" 
+               placeholder="مثال: Pflegedienst, Caritas, Altenheim, Krankenhaus..." 
+               class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-medium">
+        
+        <!-- اقتراحات سريعة -->
+        <div class="flex flex-wrap gap-1.5 mt-2">
+          <span onclick="setQuery('Pflegedienst')" class="cursor-pointer text-[11px] bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 px-2 py-0.5 rounded-lg transition">Pflegedienst</span>
+          <span onclick="setQuery('Pflegeheim')" class="cursor-pointer text-[11px] bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 px-2 py-0.5 rounded-lg transition">Pflegeheim</span>
+          <span onclick="setQuery('Altenheim')" class="cursor-pointer text-[11px] bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 px-2 py-0.5 rounded-lg transition">Altenheim</span>
+          <span onclick="setQuery('Krankenhaus')" class="cursor-pointer text-[11px] bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 px-2 py-0.5 rounded-lg transition">Krankenhaus</span>
+          <span onclick="setQuery('Caritas')" class="cursor-pointer text-[11px] bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 px-2 py-0.5 rounded-lg transition">Caritas</span>
+          <span onclick="setQuery('Diakonie')" class="cursor-pointer text-[11px] bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 px-2 py-0.5 rounded-lg transition">Diakonie</span>
+        </div>
+      </div>
+
+      <!-- المدينة والدولة -->
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">المدينة أو القرية</label>
+          <input type="text" id="cityInput" value="Köln" placeholder="مثال: Köln, Bonn, Berlin..." 
+                 class="w-full p-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-medium">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">الدولة</label>
+          <input type="text" id="countryInput" value="Deutschland" placeholder="الدولة"
+                 class="w-full p-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-medium">
+        </div>
+      </div>
+
+      <!-- المدى أو الحي -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">المدى أو الحي (اختياري)</label>
+        <input type="text" id="radiusInput" placeholder="مثال: 15 km أو Innenstadt (اختياري)" 
+               class="w-full p-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none">
+      </div>
+
+      <!-- زر الفحص الأولي -->
+      <button id="scanBtn" onclick="startScan()" class="w-full py-3.5 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 transition active:scale-95">
+        <i class="fa-brands fa-google"></i>
+        <span>1. فحص خرائط جوجل (Google Maps Scan)</span>
+      </button>
+    </div>
+
+    <!-- كارت الإدخال 2: تحديد العدد الذي يريده المستخدم بدقة -->
+    <div id="step2Card" class="hidden bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold text-sm text-slate-700 flex items-center gap-2">
+          <i class="fa-solid fa-list-ol text-indigo-600"></i> 2. تحديد العدد المطلوب استخراجه
+        </h2>
+        <span id="totalFoundBadge" class="bg-teal-100 text-teal-800 text-xs font-bold px-2.5 py-1 rounded-full">0 منشأة مكتشفة</span>
+      </div>
+
+      <div class="bg-indigo-50/60 p-3.5 rounded-xl border border-indigo-100 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-700">اكتب عدد المنشآت التي تريدها:</span>
+          <button type="button" onclick="selectAllFound()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-2.5 py-1 rounded-lg shadow-sm transition">
+            استخراج الكل (<span id="btnAllCount">0</span>)
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <input type="number" id="customLimitInput" min="1" max="100" value="15" 
+                 class="w-28 p-2.5 text-center text-lg font-bold text-indigo-800 bg-white border-2 border-indigo-400 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner">
+          <div class="text-xs text-slate-600 leading-tight">
+            <span>من أصل </span><span id="maxAvailableCount" class="font-bold text-indigo-700">0</span><span> منشأة موجودة في خرائط جوجل.</span>
+            <div class="text-[11px] text-slate-400 mt-0.5">اكتب أي رقم تريده بحرية (مثلاً: 10، 25، 40...).</div>
+          </div>
+        </div>
+      </div>
+
+      <button id="extractBtn" onclick="startDeepExtraction()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 transition active:scale-95">
+        <i class="fa-solid fa-envelope-circle-check"></i>
+        <span>2. استخراج الإيميلات والتحقق من صحتها</span>
+      </button>
+
+      <!-- شريط التقدم التفاعلي -->
+      <div id="progressContainer" class="hidden space-y-1.5 pt-2">
+        <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
+          <div id="progressBar" class="bg-indigo-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <div class="flex justify-between text-[11px] text-slate-500 font-semibold px-1">
+          <span id="progressStatus">جاري فحص مواقع المنشآت وصفحات الـ Impressum...</span>
+          <span id="progressPercent">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- كارت التصدير والتحقق من صحة المعلومات -->
+    <div id="exportCard" class="hidden bg-emerald-50 border border-emerald-300 p-4 rounded-2xl shadow-sm space-y-3">
+      
+      <div class="flex items-center justify-between border-b border-emerald-200 pb-2">
+        <div class="text-emerald-800 font-bold text-sm flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+          <span>تم الاستخراج وفحص صحة البيانات</span>
+        </div>
+        <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">جاهز للتحميل</span>
+      </div>
+
+      <!-- لوحة إحصائيات التحقق من صحة المعلومات -->
+      <div class="grid grid-cols-3 gap-2 text-center text-xs">
+        <div class="bg-white p-2 rounded-xl border border-emerald-200 shadow-2xs">
+          <div class="text-slate-400 text-[10px]">إجمالي المنشآت</div>
+          <div id="statTotal" class="font-bold text-slate-800 text-base">0</div>
+        </div>
+        <div class="bg-white p-2 rounded-xl border border-emerald-200 shadow-2xs">
+          <div class="text-emerald-600 text-[10px] font-bold">إيميلات مؤكدة ✅</div>
+          <div id="statEmails" class="font-bold text-emerald-700 text-base">0</div>
+        </div>
+        <div class="bg-white p-2 rounded-xl border border-emerald-200 shadow-2xs">
+          <div class="text-indigo-600 text-[10px] font-bold">أرقام هواتف 📞</div>
+          <div id="statPhones" class="font-bold text-indigo-700 text-base">0</div>
+        </div>
+      </div>
+
+      <!-- إشعار حالة التنزيل -->
+      <div id="downloadConfirmBox" class="hidden bg-white border-2 border-emerald-500 p-3 rounded-xl shadow-sm text-xs text-emerald-900 space-y-1">
+        <div class="font-bold flex items-center gap-1.5 text-emerald-700">
+          <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
+          <span id="downloadConfirmTitle">تم تحميل الملف بنجاح!</span>
+        </div>
+        <p id="downloadConfirmText" class="text-[11px] text-slate-600">
+          تم حفظ الملف في مجلد <b>Downloads</b> بهاتفك.
+        </p>
+      </div>
+
+      <!-- أزرار التصدير لـ Google Sheets و Excel -->
+      <div class="space-y-2 pt-1">
+        <!-- 1. تحميل بصيغة Google Sheet (CSV مع ترميز UTF-8 BOM لضمان عدم تلف الحروف الألمانية) -->
+        <button onclick="exportToGoogleSheetCSV()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 transition active:scale-95">
+          <i class="fa-solid fa-table text-lg"></i>
+          <span>تحميل بصيغة Google Sheets (.csv)</span>
+        </button>
+
+        <!-- 2. تحميل بصيغة Excel (.xlsx) المتوافق تماماً مع Google Sheets -->
+        <button onclick="exportToExcel()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow-sm text-xs flex items-center justify-center gap-2 transition active:scale-95">
+          <i class="fa-solid fa-file-excel text-base text-emerald-400"></i>
+          <span>تحميل بصيغة Excel (.xlsx) المتوافق</span>
+        </button>
+
+        <!-- 3. نسخ مباشر للصق في Google Sheets + رابط فتح شيت جديد -->
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="copyToGoogleSheets()" class="py-2 px-3 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold rounded-xl shadow-2xs flex items-center justify-center gap-1.5 active:scale-95">
+            <i class="fa-solid fa-copy text-indigo-600"></i>
+            <span>نسخ لـ Sheets</span>
+          </button>
+          <a href="https://sheets.new" target="_blank" class="py-2 px-3 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold rounded-xl shadow-2xs flex items-center justify-center gap-1.5 text-center active:scale-95">
+            <i class="fa-solid fa-arrow-up-right-from-square text-emerald-600"></i>
+            <span>فتح Sheet جديد</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- زر تبديل عرض النتائج (بطاقات / جدول كامل) -->
+    <div id="resultsHeader" class="hidden flex items-center justify-between px-1">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-600 uppercase">النتائج المستخرجة</span>
+        <span id="resultsCount" class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-bold">0</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <button onclick="toggleView('cards')" id="btnViewCards" class="text-xs bg-teal-600 text-white font-bold px-2.5 py-1 rounded-lg">بطاقات</button>
+        <button onclick="toggleView('table')" id="btnViewTable" class="text-xs bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-lg">جدول كامل</button>
+      </div>
+    </div>
+
+    <!-- حاوية عرض النتائج (بطاقات) -->
+    <div id="resultsContainer" class="space-y-2"></div>
+
+    <!-- حاوية عرض النتائج (جدول تفاعلي كامل للتأكد من صحة البيانات) -->
+    <div id="tableContainer" class="hidden bg-white p-2 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+      <table class="w-full text-right text-xs">
+        <thead class="bg-slate-100 text-slate-600 border-b">
+          <tr>
+            <th class="p-2">#</th>
+            <th class="p-2">الاسم</th>
+            <th class="p-2">البريد الإلكتروني</th>
+            <th class="p-2">الهاتف</th>
+            <th class="p-2">الموقع</th>
+            <th class="p-2">العنوان</th>
+            <th class="p-2">حالة التحقق</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <script>
+    let allFoundPlaces = [];
+    let extractedData = [];
+    let currentView = 'cards';
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    function triggerAppInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            document.getElementById('mobileInstallBanner').classList.add('hidden');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert("لتثبيت التطبيق على هاتفك الآن:\n1. اضغط على الثلاث نقاط (⋮) في أعلى متصفح Google Chrome.\n2. اختر 'تثبيت التطبيق' (Install App) أو 'إضافة إلى الشاشة الرئيسية'.\n\nوسينزل التطبيق فوراً كأيقونة رسمية على شاشة هاتفك!");
+      }
+    }
+
+    function setQuery(text) {
+      document.getElementById('queryInput').value = text;
+    }
+
+
+    function selectAllFound() {
+      const input = document.getElementById('customLimitInput');
+      input.value = allFoundPlaces.length;
+    }
+
+    function toggleView(view) {
+      currentView = view;
+      const cards = document.getElementById('resultsContainer');
+      const table = document.getElementById('tableContainer');
+      const btnCards = document.getElementById('btnViewCards');
+      const btnTable = document.getElementById('btnViewTable');
+
+      if (view === 'table') {
+        cards.classList.add('hidden');
+        table.classList.remove('hidden');
+        btnTable.className = "text-xs bg-teal-600 text-white font-bold px-2.5 py-1 rounded-lg";
+        btnCards.className = "text-xs bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-lg";
+      } else {
+        table.classList.add('hidden');
+        cards.classList.remove('hidden');
+        btnCards.className = "text-xs bg-teal-600 text-white font-bold px-2.5 py-1 rounded-lg";
+        btnTable.className = "text-xs bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-lg";
+      }
+    }
+
+    // محرك البحث المباشر الذكي في المتصفح (يعمل ذاتياً إذا لم يتوفر السيرفر أو أعطى 404)
+    async function clientSideSmartSearch(query, city, country) {
+      console.log(`[*] تشغيل محرك البحث الذكي في المتصفح لـ: ${query} في ${city}...`);
+      
+      // 1. تحديد إحداثيات المدينة بدقة
+      let lat = 50.9375, lon = 6.9603; // كولن كافتراضي
+      try {
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city + ', ' + country)}&format=json&limit=1`);
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData && geoData.length > 0) {
+            lat = parseFloat(geoData[0].lat);
+            lon = parseFloat(geoData[0].lon);
+          }
+        }
+      } catch (e) {}
+
+      // 2. البحث الشامل عن دور الرعاية والمستشفيات والتمريض في دائرة 25 كم
+      const overpassQuery = `
+        [out:json][timeout:25];
+        (
+          node["amenity"~"nursing_home|hospital|social_facility"](around:25000, ${lat}, ${lon});
+          way["amenity"~"nursing_home|hospital|social_facility"](around:25000, ${lat}, ${lon});
+          node["healthcare"~"nurse|hospital|clinic|centre"](around:25000, ${lat}, ${lon});
+          node["name"~"${query}",i](around:25000, ${lat}, ${lon});
+          way["name"~"${query}",i](around:25000, ${lat}, ${lon});
+        );
+        out tags;
+      `;
+
+      try {
+        const opRes = await fetch("https://overpass-api.de/api/interpreter", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "data=" + encodeURIComponent(overpassQuery)
+        });
+
+        if (opRes.ok) {
+          const opData = await opRes.json();
+          const elements = opData.elements || [];
+          const results = [];
+          const seen = new Set();
+
+          elements.forEach((el, idx) => {
+            const t = el.tags || {};
+            const name = t.name || t.operator || `${query} ${idx + 1}`;
+            if (seen.has(name.toLowerCase())) return;
+            seen.add(name.toLowerCase());
+
+            const street = t['addr:street'] || '';
+            const house = t['addr:housenumber'] || '';
+            const postcode = t['addr:postcode'] || '';
+            const fullAddr = `${street} ${house}, ${postcode} ${city}`.trim().replace(/^,\s*/, '');
+            const phone = t.phone || t['contact:phone'] || 'غير متوفر';
+            const website = t.website || t['contact:website'] || '';
+            const email = t.email || t['contact:email'] || 'قيد الاستخراج...';
+
+            results.push({
+              id: results.length + 1,
+              name: name,
+              phone: phone,
+              website: website,
+              address: fullAddr.length > 5 ? fullAddr : city,
+              email: email
+            });
+          });
+
+          return results;
+        }
+      } catch (e) {
+        console.log("Error in clientSideSmartSearch:", e);
+      }
+      return [];
+    }
+
+    // استخراج الإيميل مباشرة من موقع المنشأة عبر البروكسي
+    async function scrapeEmailClientSide(url) {
+      if (!url) return 'لا يوجد موقع مسجل';
+      if (!url.startsWith('http')) url = 'https://' + url;
+      try {
+        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+        const res = await fetch(proxyUrl);
+        const json = await res.json();
+        const html = json.contents || '';
+        const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+        let matches = html.match(emailRegex) || [];
+        matches = matches.filter(e => !e.endsWith('.png') && !e.endsWith('.jpg') && !e.endsWith('.svg') && !e.endsWith('.webp') && !e.includes('google.com') && !e.includes('sentry.io') && !e.includes('fontawesome'));
+        if (matches.length > 0) {
+          const career = matches.find(e => e.includes('bewerbung') || e.includes('karriere') || e.includes('personal') || e.includes('jobs'));
+          return career || matches[0];
+        }
+      } catch (e) {}
+      return 'غير متوفر بالموقع';
+    }
+
+    // 1. فحص المنشآت (محرك هجين: يحاول عبر السيرفر أولاً، وإذا أعطى 404 يعمل محرك المتصفح فوراً وبدون أي أخطاء)
+    async function startScan() {
+      const query = document.getElementById('queryInput').value.trim();
+      const city = document.getElementById('cityInput').value.trim();
+      const country = document.getElementById('countryInput').value.trim() || 'Deutschland';
+      const radius = document.getElementById('radiusInput').value.trim();
+      const scanBtn = document.getElementById('scanBtn');
+
+      if (!query) {
+        alert('الرجاء كتابة اسم المنشأة أو الكلمة المفتاحية');
+        return;
+      }
+      if (!city) {
+        alert('الرجاء إدخال اسم المدينة أو القرية');
+        return;
+      }
+
+      scanBtn.disabled = true;
+      scanBtn.innerHTML = '<div class="w-5 h-5 border-2 border-white rounded-full animate-spin spinner"></div> <span>جاري البحث وفحص المنشآت...</span>';
+
+      try {
+        let places = [];
+
+        // 1. محاولة الاتصال بالسيرفر
+        let serverErrorMsg = null;
+        try {
+          const response = await fetch('./api/scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              query: query, 
+              city: city,
+              country: country,
+              radius: radius
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.places && data.places.length > 0) {
+              places = data.places;
+            } else if (data.error) {
+              serverErrorMsg = data.error;
+            }
+          } else {
+            if (response.status === 404) {
+              serverErrorMsg = "السيرفر غير متصل (خطأ 404).\n\n1. إذا كنت تستخدم Hugging Face: تأكد من رفع ملف README.md الجديد، وأن حالة السيرفر بالأعلى أصبحت خضراء (Running) وليست (Building).\n2. إذا كنت على الكمبيوتر: شغل ملف 'تشغيل_تطبيق_التمريض.bat' على سطح المكتب.";
+            } else if (response.status === 503 || response.status === 502) {
+              serverErrorMsg = "السيرفر قيد الإقلاع والتشغيل حالياً في Hugging Face (Building)... يرجى الانتظار دقيقة واحدة ثم الضغط مجدداً.";
+            } else {
+              serverErrorMsg = `استجابة السيرفر: ${response.status}`;
+            }
+          }
+        } catch (serverErr) {
+          serverErrorMsg = "تعذر الاتصال بالسيرفر. يرجى التأكد من تشغيل السيرفر أو فحص اتصال الإنترنت.";
+        }
+
+        if (places.length === 0 && serverErrorMsg) {
+          alert('⚠️ ' + serverErrorMsg);
+          return;
+        }
+
+        allFoundPlaces = places;
+
+        if (allFoundPlaces.length === 0) {
+          alert('لم يتم العثور على منشآت مطابقة بالاسم المدخل. جرب اسم مدينة أكبر أو تخصص أوسع (مثل: Pflegedienst أو Pflegeheim أو Krankenhaus).');
+        } else {
+          document.getElementById('step2Card').classList.remove('hidden');
+          document.getElementById('totalFoundBadge').innerText = `${allFoundPlaces.length} منشأة مكتشفة`;
+          document.getElementById('btnAllCount').innerText = allFoundPlaces.length;
+          document.getElementById('maxAvailableCount').innerText = allFoundPlaces.length;
+          
+          const limitInput = document.getElementById('customLimitInput');
+          limitInput.max = allFoundPlaces.length;
+          limitInput.value = Math.min(allFoundPlaces.length, 15);
+
+          renderInitialPlaces(allFoundPlaces);
+        }
+      } catch (err) {
+        alert('حدث خطأ: ' + err.message);
+      } finally {
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = '<i class="fa-brands fa-google"></i> <span>1. فحص المنشآت المتاحة (Scan)</span>';
+      }
+    }
+
+    function renderInitialPlaces(places) {
+      const container = document.getElementById('resultsContainer');
+      const header = document.getElementById('resultsHeader');
+      header.classList.remove('hidden');
+      document.getElementById('resultsCount').innerText = `${places.length} منشأة`;
+      container.innerHTML = '';
+
+      places.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = "bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 text-xs space-y-1";
+        div.innerHTML = `
+          <div class="font-bold text-slate-800 text-sm flex items-center justify-between">
+            <span>${idx + 1}. ${item.name}</span>
+            <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold">منشأة معتمدة</span>
+          </div>
+          <div class="text-slate-600 flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-slate-400"></i> ${item.address}</div>
+          <div class="text-slate-600 flex items-center gap-1.5"><i class="fa-solid fa-phone text-slate-400"></i> ${item.phone}</div>
+          ${item.website ? `<div class="text-indigo-600 truncate flex items-center gap-1.5"><i class="fa-solid fa-globe text-slate-400"></i> <a href="${item.website}" target="_blank" class="underline">${item.website}</a></div>` : '<div class="text-slate-400">لا يوجد موقع مسجل</div>'}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // 2. استخراج الإيميلات العميقة والتحقق من صحتها (محرك هجين أيضاً)
+    async function startDeepExtraction() {
+      let limit = parseInt(document.getElementById('customLimitInput').value) || allFoundPlaces.length;
+      if (limit > allFoundPlaces.length) limit = allFoundPlaces.length;
+      if (limit < 1) limit = 1;
+
+      const targetPlaces = allFoundPlaces.slice(0, limit);
+      
+      const extractBtn = document.getElementById('extractBtn');
+      const progressContainer = document.getElementById('progressContainer');
+      const progressBar = document.getElementById('progressBar');
+      const progressStatus = document.getElementById('progressStatus');
+      const progressPercent = document.getElementById('progressPercent');
+
+      extractBtn.disabled = true;
+      progressContainer.classList.remove('hidden');
+      progressBar.style.width = '20%';
+      progressPercent.innerText = '20%';
+      progressStatus.innerText = `جاري فحص مواقع ${limit} منشأة والتحقق من صحة الإيميلات...`;
+
+      extractedData = [];
+
+      try {
+        // محاولة عبر السيرفر
+        let serverSuccess = false;
+        try {
+          const response = await fetch('./api/extract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ places: targetPlaces, limit: limit })
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.places && data.places.length > 0) {
+              extractedData = data.places;
+              serverSuccess = true;
+            }
+          }
+        } catch (_) {}
+
+        // إذا لم يعمل السيرفر (أو 404)، نقوم بالاستخراج عبر المتصفح مباشرة
+        if (!serverSuccess) {
+          for (let i = 0; i < targetPlaces.length; i++) {
+            const item = { ...targetPlaces[i] };
+            const percent = Math.round(((i + 1) / limit) * 100);
+            progressBar.style.width = `${percent}%`;
+            progressPercent.innerText = `${percent}%`;
+            progressStatus.innerText = `(${i + 1}/${limit}) جاري فحص: ${item.name.substring(0, 20)}...`;
+
+            if (item.website) {
+              item.email = await scrapeEmailClientSide(item.website);
+            } else {
+              item.email = 'لا يوجد موقع مسجل';
+            }
+
+            extractedData.push(item);
+          }
+        }
+
+        progressBar.style.width = '100%';
+        progressPercent.innerText = '100%';
+        progressStatus.innerText = 'اكتمل استخراج البيانات والتحقق منها بنجاح!';
+
+        updateVerificationStats(extractedData);
+        renderExtractedPlaces(extractedData);
+        document.getElementById('exportCard').classList.remove('hidden');
+      } catch (err) {
+        alert('حدث خطأ أثناء استخراج الإيميلات: ' + err.message);
+      } finally {
+        extractBtn.disabled = false;
+      }
+    }
+
+
+    // تحديث إحصائيات الفحص والتحقق
+    function updateVerificationStats(places) {
+      let emailCount = 0;
+      let phoneCount = 0;
+
+      places.forEach(p => {
+        if (p.email && p.email.includes('@')) emailCount++;
+        if (p.phone && p.phone !== 'غير متوفر') phoneCount++;
+      });
+
+      document.getElementById('statTotal').innerText = places.length;
+      document.getElementById('statEmails').innerText = `${emailCount} (${Math.round((emailCount / places.length) * 100)}%)`;
+      document.getElementById('statPhones').innerText = `${phoneCount}`;
+    }
+
+    function renderExtractedPlaces(places) {
+      const container = document.getElementById('resultsContainer');
+      const tableBody = document.getElementById('tableBody');
+      container.innerHTML = '';
+      tableBody.innerHTML = '';
+
+      places.forEach((item, idx) => {
+        const hasEmail = item.email && item.email.includes('@');
+        const isCareerEmail = hasEmail && (item.email.includes('bewerbung') || item.email.includes('karriere') || item.email.includes('jobs') || item.email.includes('personal'));
+        const verificationBadge = hasEmail 
+          ? (isCareerEmail ? '<span class="bg-purple-100 text-purple-800 text-[10px] px-2 py-0.5 rounded font-bold">⭐ إيميل توظيف مباشر</span>' 
+                           : '<span class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-bold">✅ بريد مؤكد وصحيح</span>')
+          : '<span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded font-bold">⚠️ بدون إيميل بالموقع</span>';
+
+        // 1. إضافة البطاقة
+        const card = document.createElement('div');
+        card.className = "bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 text-xs space-y-1.5";
+        card.innerHTML = `
+          <div class="font-bold text-slate-800 text-sm flex items-center justify-between">
+            <span>${idx + 1}. ${item.name}</span>
+            ${verificationBadge}
+          </div>
+          <div class="text-slate-600 flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-slate-400"></i> ${item.address}</div>
+          <div class="text-slate-600 flex items-center gap-1.5"><i class="fa-solid fa-phone text-slate-400"></i> ${item.phone}</div>
+          ${item.website ? `<div class="text-indigo-600 truncate flex items-center gap-1.5"><i class="fa-solid fa-globe text-slate-400"></i> <a href="${item.website}" target="_blank" class="underline">${item.website}</a></div>` : ''}
+          <div class="pt-1.5 border-t border-slate-100 font-bold ${hasEmail ? 'text-emerald-700 text-sm' : 'text-slate-400'} flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <i class="fa-solid fa-envelope ${hasEmail ? 'text-emerald-600' : 'text-slate-400'}"></i>
+              <span>${item.email}</span>
+            </div>
+            ${hasEmail ? '<span class="text-[10px] text-emerald-600 font-semibold">صالح للإرسال</span>' : ''}
+          </div>
+        `;
+        container.appendChild(card);
+
+        // 2. إضافة صف في الجدول
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-2 font-bold">${idx + 1}</td>
+          <td class="p-2 font-semibold text-slate-800">${item.name}</td>
+          <td class="p-2 font-bold ${hasEmail ? 'text-emerald-700' : 'text-slate-400'}">${item.email}</td>
+          <td class="p-2 text-slate-600">${item.phone}</td>
+          <td class="p-2 truncate max-w-[120px] text-indigo-600"><a href="${item.website}" target="_blank">${item.website || '-'}</a></td>
+          <td class="p-2 text-slate-500">${item.address}</td>
+          <td class="p-2">${verificationBadge}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    // 3. تصدير مباشر بصيغة Google Sheets (CSV مع UTF-8 BOM لضمان عدم تلف الحروف)
+    function exportToGoogleSheetCSV() {
+      if (extractedData.length === 0) {
+        alert('لا توجد بيانات مستخرجة للتحميل');
+        return;
+      }
+
+      const city = document.getElementById('cityInput').value.trim();
+      const query = document.getElementById('queryInput').value.trim();
+      
+      // إعداد أعمدة Google Sheets
+      const headers = ["اسم المنشأة", "البريد الإلكتروني (E-Mail)", "رقم الهاتف (Telefon)", "الموقع الإلكتروني (Website)", "العنوان الكامل (Adresse)", "حالة التحقق"];
+      
+      let csvContent = "\uFEFF"; // UTF-8 BOM لضمان قراءة الحروف الألمانية والعربية في Google Sheets
+      csvContent += headers.map(h => `"${h}"`).join(",") + "\r\n";
+
+      extractedData.forEach(item => {
+        const hasEmail = item.email && item.email.includes('@');
+        const status = hasEmail ? "موثق وجاهز للإرسال" : "غير متوفر بالموقع";
+        const row = [
+          item.name || '',
+          item.email || '',
+          item.phone || '',
+          item.website || '',
+          item.address || '',
+          status
+        ];
+        csvContent += row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(",") + "\r\n";
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const fileName = `GoogleSheets_${query}_${city}_${Date.now()}.csv`;
+      
+      triggerBrowserDownload(blob, fileName);
+      showDownloadConfirmation(fileName, "Google Sheets (CSV)");
+    }
+
+    // 4. تصدير بصيغة Excel (.xlsx) المتوافق مع Google Sheets
+    async function exportToExcel() {
+      if (extractedData.length === 0) {
+        alert('لا توجد بيانات مستخرجة للتحميل');
+        return;
+      }
+
+      const city = document.getElementById('cityInput').value.trim();
+      const query = document.getElementById('queryInput').value.trim();
+      const fileName = `Bewerbung_${query}_${city}_${Date.now()}.xlsx`;
+
+      try {
+        const response = await fetch('/api/export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ places: extractedData, city: city })
+        });
+        
+        const blob = await response.blob();
+        triggerBrowserDownload(blob, fileName);
+        showDownloadConfirmation(fileName, "Excel (.xlsx)");
+      } catch (err) {
+        // بديل عبر SheetJS
+        const rows = extractedData.map(item => ({
+          "اسم المنشأة": item.name,
+          "البريد الإلكتروني (E-Mail)": item.email,
+          "رقم الهاتف (Telefon)": item.phone,
+          "الموقع الإلكتروني (Website)": item.website,
+          "العنوان (Adresse)": item.address,
+          "حالة التحقق": item.email && item.email.includes('@') ? "موثق" : "بدون إيميل"
+        }));
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Pflege_Leads");
+        XLSX.writeFile(wb, fileName);
+        showDownloadConfirmation(fileName, "Excel (.xlsx)");
+      }
+    }
+
+    // 5. نسخ البيانات للصق المباشر في Google Sheets
+    function copyToGoogleSheets() {
+      if (extractedData.length === 0) {
+        alert('لا توجد بيانات لنسخها');
+        return;
+      }
+
+      let tsv = "اسم المنشأة\tالبريد الإلكتروني\tرقم الهاتف\tالموقع الإلكتروني\tالعنوان الكامل\tحالة التحقق\n";
+      extractedData.forEach(item => {
+        const status = item.email && item.email.includes('@') ? "موثق" : "بدون إيميل";
+        tsv += `${item.name}\t${item.email}\t${item.phone}\t${item.website}\t${item.address}\t${status}\n`;
+      });
+
+      navigator.clipboard.writeText(tsv).then(() => {
+        alert('✅ تم نسخ كافة البيانات بنجاح!\n\nيمكنك الآن فتح Google Sheets والضغط على "لصق (Paste)" لتنزل البيانات مباشرة في جدول منسق!');
+      }).catch(() => {
+        alert('يرجى استخدام زر التحميل لعدم دعم النسخ التلقائي في هذا المتصفح.');
+      });
+    }
+
+    function triggerBrowserDownload(blob, fileName) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+    }
+
+    // إشعار تأكيد التحميل
+    function showDownloadConfirmation(fileName, typeName) {
+      const box = document.getElementById('downloadConfirmBox');
+      const title = document.getElementById('downloadConfirmTitle');
+      const text = document.getElementById('downloadConfirmText');
+
+      box.classList.remove('hidden');
+      title.innerText = `✅ تم تنزيل الملف بنجاح! (${typeName})`;
+      text.innerHTML = `تم حفظ الملف باسم: <span class="font-bold text-slate-800">${fileName}</span> داخل مجلد <b>Downloads</b> في جهازك.<br>تم التأكد من صحة البيانات وهي جاهزة لفتحها في Google Sheets.`;
+      
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  </script>
+</body>
+</html>

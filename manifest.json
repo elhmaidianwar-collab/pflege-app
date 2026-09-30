@@ -1,0 +1,16 @@
+{
+  "name": "Pflege Leads Scraper",
+  "short_name": "Pflege Leads",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d9488",
+  "theme_color": "#0d9488",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3063/3063823.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
